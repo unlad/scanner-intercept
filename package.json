@@ -3,22 +3,21 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "bin": "./src/index.ts",
+  "bin": "dist/index.js",
   "scripts": {
     "start": "node --import=tsx ./src/index.ts",
     "dev": "node --import=tsx --watch ./src/index.ts",
-    "pkg": "pkg package.json"
+    "build": "tsc",
+    "pkg": "npm run build && pkg package.json -o pkg/interceptor.exe"
+  },
+  "pkg": {
+    "scripts": "dist/**/*.js",
+    "assets": ["node_modules/@serialport/bindings-cpp"],
+    "targets": ["node22-win-x64"]
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
-  "pkg": {
-    "scripts": "src/**/*.ts",
-    "assets": "node_modules/@serialport/bindings-cpp/prebuilds",
-    "targets": ["latest-win-x64"],
-    "outputPath": "dist"
-  },
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/express-ws": "^3.0.5",
