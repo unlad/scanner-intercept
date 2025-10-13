@@ -7,6 +7,7 @@ const { app: server, getWss } = extend(express().use(json()))
 
 let port: SerialPort | null = null
 let parser: ReadlineParser | null = null
+let previous: string = ""
 
 server.get("/list", async (req, res) => {
     const ports = await SerialPort.list()
@@ -19,6 +20,9 @@ server.post("/select", async (req, res) => {
         parser = port.pipe(new ReadlineParser({ delimiter: "\r" }))
 
         parser.on("data", (data) => {
+            if (data == previous) return
+
+            previous = data
             getWss().clients.forEach(socket => socket.send(data))
         })
 
