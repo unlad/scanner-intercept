@@ -1,7 +1,7 @@
 {
   "name": "scanner-intercept",
   "version": "1.1.0",
-  "description": "",
+  "description": "Intermediary interceptor that processes data streams from a barcode scanner in VCR mode.",
   "main": "index.js",
   "bin": "dist/index.js",
   "scripts": {
@@ -20,8 +20,8 @@
     ]
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "xi-pec",
+  "license": "MIT",
   "devDependencies": {
     "@types/express": "^5.0.3",
     "@types/express-ws": "^3.0.5",
