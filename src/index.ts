@@ -7,7 +7,13 @@ const { app: server, getWss } = extend(express().use(json()))
 
 let port: SerialPort | null = null
 let parser: ReadlineParser | null = null
-let previous: string = ""
+let previous: string | null = null
+
+function broadcast(data: Record<string, any>) {
+    getWss().clients.forEach(socket => socket.send(
+        JSON.stringify(data)
+    ))
+}
 
 server.get("/list", async (req, res) => {
     const ports = await SerialPort.list()
@@ -16,27 +22,32 @@ server.get("/list", async (req, res) => {
 
 server.post("/select", async (req, res) => {
     if (req.body.path) {
-        port = new SerialPort({ path: req.body.path, baudRate: 9600 })
+        if (req.body.path == port?.path) return res.send("OK")
+
+        port = new SerialPort({ path: req.body.path, baudRate: 9600, lock: false })
         parser = port.pipe(new ReadlineParser({ delimiter: "\r" }))
 
         parser.on("data", (data) => {
             if (data == previous) return
 
             previous = data
-            getWss().clients.forEach(socket => socket.send(data))
+            broadcast({ type: "data", data })
+        })
+
+        port.on("error", (err) => {
+            console.log(`Port Error: ${err}`)
+        })
+
+        parser.on("error", (err) => {
+            console.log(`Parser Error: ${err}`)
         })
 
         port.on("close", () => {
             port = null
+            broadcast({ type: "state", active: false })
         })
 
-        port.on("error", () => {
-            port = null
-        })
-
-        parser.on("close", () => {
-            parser = null
-        })
+        broadcast({ type: "state", active: true })
     } else {
         port?.destroy()
         parser?.destroy()
@@ -45,7 +56,9 @@ server.post("/select", async (req, res) => {
     res.send("OK")
 })
 
-server.ws("/listen", () => {})
+server.ws("/listen", (ws) => {
+    ws.send(JSON.stringify({ type: "state", active: !!port }))
+})
 
 server.listen(4567, () => {
     console.log(`Listening at port 4567`)
