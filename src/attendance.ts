@@ -1,4 +1,5 @@
 import { dirname, join } from "path"
+import { pathToFileURL } from "url"
 
 type Constants = {
     formId: string
@@ -25,7 +26,7 @@ let constants: Constants
 
 function resolveFile(...path: string[]) {
     // @ts-ignore
-    return process.pkg ? join(dirname(process.execPath), ...path) : join(__dirname, ...path)
+    return pathToFileURL(process.pkg ? join(dirname(process.execPath), ...path) : join(__dirname, ...path)).href
 }
 
 async function submit(data: UserData, temperature: number) {
