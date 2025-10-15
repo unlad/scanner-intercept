@@ -3,6 +3,8 @@ import { ReadlineParser } from "@serialport/parser-readline"
 import express, { json } from "express"
 import extend from "express-ws"
 
+import { attendance, loadEntries } from "./attendance";
+
 const { app: server, getWss } = extend(express().use(json()))
 
 let port: SerialPort | null = null
@@ -29,17 +31,20 @@ server.post("/select", async (req, res) => {
 
         parser.on("data", (data) => {
             if (data == previous) return
-
             previous = data
-            broadcast({ type: "data", data })
+            
+            let processed = attendance(data)
+            broadcast({ type: "data", data: processed })
         })
 
         port.on("error", (err) => {
             console.log(`Port Error: ${err}`)
+            broadcast({ type: "error", source:"port", err })
         })
 
         parser.on("error", (err) => {
             console.log(`Parser Error: ${err}`)
+            broadcast({ type: "error", source:"parser", err })
         })
 
         port.on("close", () => {
@@ -48,6 +53,7 @@ server.post("/select", async (req, res) => {
         })
 
         broadcast({ type: "state", active: true })
+        parser.emit("data", "12-3456-789")
     } else {
         port?.destroy()
         parser?.destroy()
@@ -58,6 +64,10 @@ server.post("/select", async (req, res) => {
 
 server.ws("/listen", (ws) => {
     ws.send(JSON.stringify({ type: "state", active: !!port }))
+})
+
+loadEntries().then(() => {
+    console.log("Loaded entries")
 })
 
 server.listen(4567, () => {
