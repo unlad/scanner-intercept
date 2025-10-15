@@ -15,10 +15,6 @@
     "assets": [
       "node_modules/@serialport/bindings-cpp"
     ],
-    "ignore": [
-      "db.json",
-      "constants.js"
-    ],
     "targets": [
       "node22-win-x64"
     ]

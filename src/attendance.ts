@@ -1,6 +1,11 @@
 import { dirname, join } from "path"
 import { pathToFileURL } from "url"
 
+import { entries } from "../db.json"
+
+// @ts-ignore
+import { default as constants } from "../constants.js"
+
 type Constants = {
     formId: string
     email: string
@@ -19,14 +24,9 @@ interface UserData {
   organization: string;
 }
 
-let entries: Record<string, UserData> = {}
-
-// @ts-ignore
-let constants: Constants
-
 function resolveFile(...path: string[]) {
     // @ts-ignore
-    return pathToFileURL(process.pkg ? join(dirname(process.execPath), ...path) : join(__dirname, ...path)).href
+    return pathToFileURL(process.pkg ? join(dirname(process.execPath), ...path) : join(__dirname, "..", ...path)).href
 }
 
 async function submit(data: UserData, temperature: number) {
@@ -62,16 +62,8 @@ async function submit(data: UserData, temperature: number) {
     }
 }
 
-export async function load() {
-    // @ts-ignore
-    entries = (await import(resolveFile("..", "db.json"))).entries
-    
-    // @ts-ignore
-    constants = (await import(resolveFile("..", "constants.js"))).default
-}
-
 export async function attendance(data: any) {
-    const entry = entries[data]
+    const entry = (entries as Record<string, UserData>)[data]
     if (!entry) return {
         success: false,
         id: data,

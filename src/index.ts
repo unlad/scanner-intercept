@@ -3,7 +3,7 @@ import { ReadlineParser } from "@serialport/parser-readline"
 import express, { json } from "express"
 import extend from "express-ws"
 
-import { attendance, load } from "./attendance";
+import { attendance } from "./attendance";
 
 const { app: server, getWss } = extend(express().use(json()))
 
@@ -63,10 +63,6 @@ server.post("/select", async (req, res) => {
 
 server.ws("/listen", (ws) => {
     ws.send(JSON.stringify({ type: "state", active: !!port }))
-})
-
-load().then(() => {
-    console.log("Loaded entries and constants")
 })
 
 server.listen(4567, () => {
