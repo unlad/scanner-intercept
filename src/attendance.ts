@@ -1,3 +1,5 @@
+import { dirname, join } from "path"
+
 type Constants = {
     formId: string
     email: string
@@ -20,6 +22,11 @@ let entries: Record<string, UserData> = {}
 
 // @ts-ignore
 let constants: Constants
+
+function resolveFile(...path: string[]) {
+    // @ts-ignore
+    return process.pkg ? join(dirname(process.execPath), ...path) : join(__dirname, ...path)
+}
 
 async function submit(data: UserData, temperature: number) {
     const now = new Date(Date.now());
@@ -56,10 +63,10 @@ async function submit(data: UserData, temperature: number) {
 
 export async function load() {
     // @ts-ignore
-    entries = (await import("../db.json")).entries
+    entries = (await import(resolveFile("..", "db.json"))).entries
     
     // @ts-ignore
-    constants = (await import("../constants.js")).default
+    constants = (await import(resolveFile("..", "constants.js"))).default
 }
 
 export async function attendance(data: any) {
