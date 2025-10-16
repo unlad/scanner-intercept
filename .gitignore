@@ -2,5 +2,4 @@ node_modules
 dist
 pkg
 
-/db.json
-/constants.js
+config

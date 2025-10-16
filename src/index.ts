@@ -3,7 +3,7 @@ import { ReadlineParser } from "@serialport/parser-readline"
 import express, { json } from "express"
 import extend from "express-ws"
 
-import { attendance } from "./attendance";
+import { attendance, config } from "./attendance";
 
 const { app: server, getWss } = extend(express().use(json()))
 
@@ -65,6 +65,7 @@ server.ws("/listen", (ws) => {
     ws.send(JSON.stringify({ type: "state", active: !!port }))
 })
 
-server.listen(4567, () => {
+config() && server.listen(4567, () => {
     console.log(`Listening at port 4567`)
 })
+

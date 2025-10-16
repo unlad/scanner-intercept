@@ -1,10 +1,6 @@
+import { readFileSync } from "fs"
 import { dirname, join } from "path"
 import { pathToFileURL } from "url"
-
-import { entries } from "../db.json"
-
-// @ts-ignore
-import { default as constants } from "../constants.js"
 
 type Constants = {
     formId: string
@@ -24,12 +20,12 @@ interface UserData {
   organization: string;
 }
 
-function resolveFile(...path: string[]) {
-    // @ts-ignore
-    return pathToFileURL(process.pkg ? join(dirname(process.execPath), ...path) : join(__dirname, "..", ...path)).href
-}
+let constants: Constants | null = null
+let entries: Record<string, UserData> = {}
 
-async function submit(data: UserData, temperature: number) {
+async function submit(data: UserData) {
+    if (!constants) return
+
     const now = new Date(Date.now());
     const hours = now.getHours();
     const mins = now.getMinutes();
@@ -39,7 +35,7 @@ async function submit(data: UserData, temperature: number) {
         [constants.name]: data.name,
         [constants.role]: data.role,
         [constants.organization]: data.organization,
-        [constants.temperature]: temperature.toFixed(1),
+        [constants.temperature]: "36.0",
         [constants.hour_in]: hours.toString(),
         [constants.mins_in]: mins.toString(),
     };
@@ -62,6 +58,20 @@ async function submit(data: UserData, temperature: number) {
     }
 }
 
+export function config() {
+    try {
+        constants = JSON.parse(readFileSync(join(process.cwd(), "config", "constants.json")).toString())
+        entries = JSON.parse(readFileSync(join(process.cwd(), "config", "db.json")).toString())
+        
+        return true
+    } catch (e) {
+        console.log("Missing or invalid constants.json and/or db.json.")
+        new Promise(res => setTimeout(res, 5000)).then(() => process.exit(0))
+
+        return false
+    }
+}
+
 export async function attendance(data: any) {
     const entry = (entries as Record<string, UserData>)[data]
     if (!entry) return {
@@ -70,7 +80,7 @@ export async function attendance(data: any) {
         remarks: "ID does not match any student entry."
     }
 
-    const success = await submit(entry, 36.0)
+    const success = await submit(entry)
 
     return success ? {
         success: true,
