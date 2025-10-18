@@ -61,7 +61,7 @@ async function submit(data: UserData) {
 export function config() {
     try {
         constants = JSON.parse(readFileSync(join(process.cwd(), "config", "constants.json")).toString())
-        entries = JSON.parse(readFileSync(join(process.cwd(), "config", "db.json")).toString())
+        entries = JSON.parse(readFileSync(join(process.cwd(), "config", "db.json")).toString()).entries
         
         return true
     } catch (e) {

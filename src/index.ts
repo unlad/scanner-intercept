@@ -17,16 +17,12 @@ function broadcast(data: Record<string, any>) {
     ))
 }
 
-server.get("/list", async (req, res) => {
-    const ports = await SerialPort.list()
-    res.send(ports)
-})
+function select(path?: string) {
+    console.log(`new path: ${path}`)
+    if (path && path !== "") {
+        if (path == port?.path) return
 
-server.post("/select", async (req, res) => {
-    if (req.body.path) {
-        if (req.body.path == port?.path) return res.send("OK")
-
-        port = new SerialPort({ path: req.body.path, baudRate: 9600, lock: false })
+        port = new SerialPort({ path, baudRate: 9600, lock: false })
         parser = port.pipe(new ReadlineParser({ delimiter: "\r" }))
 
         parser.on("data", async (data) => {
@@ -52,20 +48,43 @@ server.post("/select", async (req, res) => {
             broadcast({ type: "state", active: false })
         })
 
-        broadcast({ type: "state", active: true })
+        broadcast({ type: "state", active: true, path })
     } else {
         port?.destroy()
         parser?.destroy()
     }
+}
 
+server.get("/list", async (req, res) => {
+    const ports = await SerialPort.list()
+    res.send(ports)
+})
+
+server.post("/select", async (req, res) => {
+    select(req.body.path)
     res.send("OK")
 })
 
 server.ws("/listen", (ws) => {
-    ws.send(JSON.stringify({ type: "state", active: !!port }))
+    ws.send(JSON.stringify({ type: "state", active: !!port, path: port?.path }))
 })
 
 config() && server.listen(4567, () => {
     console.log(`Listening at port 4567`)
+
+    setInterval(async () => {
+        if (!port) {
+            const ports = await SerialPort.list()
+            const filtered = ports.filter(p => 
+                (p.locationId || p.pnpId)
+                && p.manufacturer
+                && p.productId
+                && p.serialNumber
+                && p.vendorId
+            )
+
+            if (filtered.length) select(filtered[0]?.path)
+        }
+    }, 1000)
 })
 
