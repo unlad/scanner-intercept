@@ -62,7 +62,7 @@ server.get("/list", async (req, res) => {
 })
 
 server.post("/select", async (req, res) => {
-    select(req.body.path)
+    select(req.body?.path)
     res.send("OK")
 })
 
