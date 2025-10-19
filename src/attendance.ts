@@ -75,6 +75,7 @@ export function config() {
 export async function attendance(data: any) {
     const entry = (entries as Record<string, UserData>)[data]
     if (!entry) return {
+        timestamp: Date.now(),
         success: false,
         id: data,
         remarks: "ID does not match any student entry."
@@ -83,12 +84,14 @@ export async function attendance(data: any) {
     const success = await submit(entry)
 
     return success ? {
+        timestamp: Date.now(),
         success: true,
         id: data,
         name: entry.name,
         section: entry.organization,
         email: entry.email,
     } : {
+        timestamp: Date.now(),
         success: false,
         id: data,
         name: entry.name,

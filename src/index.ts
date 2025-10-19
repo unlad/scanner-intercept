@@ -2,10 +2,11 @@ import { SerialPort } from "serialport";
 import { ReadlineParser } from "@serialport/parser-readline"
 import express, { json } from "express"
 import extend from "express-ws"
+import cors from "cors"
 
 import { attendance, config } from "./attendance";
 
-const { app: server, getWss } = extend(express().use(json()))
+const { app: server, getWss } = extend(express().use(json()).use(cors()))
 
 let port: SerialPort | null = null
 let parser: ReadlineParser | null = null
@@ -35,12 +36,12 @@ function select(path?: string) {
 
         port.on("error", (err) => {
             console.log(`Port Error: ${err}`)
-            broadcast({ type: "error", source:"port", err })
+            broadcast({ type: "error", source: "port", err: err.message })
         })
 
         parser.on("error", (err) => {
             console.log(`Parser Error: ${err}`)
-            broadcast({ type: "error", source:"parser", err })
+            broadcast({ type: "error", source: "parser", err: err.message })
         })
 
         port.on("close", () => {
